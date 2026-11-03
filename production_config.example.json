@@ -1,0 +1,35 @@
+{
+  "database": {
+    "host": "mueller.cjmg6ek4cf9c.ap-south-1.rds.amazonaws.com",
+    "port": 53306,
+    "user": "mueller_scada",
+    "password": "",
+    "database_name": "mueller_data"
+  },
+  "ssh_tunnel": {
+    "ssh_host": "3.7.49.62",
+    "ssh_port": 30022,
+    "ssh_username": "rds-tunnel",
+    "ssh_private_key_path": "",
+    "ssh_private_key_password": null
+  },
+  "api": {
+    "base_url": "https://mueller.sandman.co.in",
+    "login_url": "/j_spring_security_check",
+    "upload_url": "/upload/save_consumption_bookings",
+    "j_username": "mueller",
+    "j_password": "",
+    "batch_size": 100
+  },
+
+  "poll_interval_seconds": 600,
+  "query_file": "production_query.sql",
+
+  "foundry_line_id": 1,
+
+  "temp_line_map": {
+    "Disa1": 1,
+    "Disa2": 2,
+    "Disa3": 3
+  }
+}

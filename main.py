@@ -163,21 +163,50 @@ MIXER_COLUMNS = [
 # Infrastructure: SSH tunnel, DB engine, one-time schema setup
 # =========================================================================
 
-tunnel = SSHTunnelForwarder(
-    (SSH["ssh_host"], SSH.get("ssh_port", 22)),
-    ssh_username=SSH["ssh_username"],
-    ssh_pkey=SSH["ssh_private_key_path"],
-    ssh_private_key_password=SSH.get("ssh_private_key_password") or None,
-    remote_bind_address=(DB["host"], int(DB["port"])),
-)
+def _make_tunnel():
+    return SSHTunnelForwarder(
+        (SSH["ssh_host"], SSH.get("ssh_port", 22)),
+        ssh_username=SSH["ssh_username"],
+        ssh_pkey=SSH["ssh_private_key_path"],
+        ssh_private_key_password=SSH.get("ssh_private_key_password") or None,
+        remote_bind_address=(DB["host"], int(DB["port"])),
+        set_keepalive=30,
+    )
+
+
+def _make_engine():
+    return create_engine(
+        f"mysql+pymysql://{quote_plus(DB['user'])}:{quote_plus(DB['password'])}"
+        f"@127.0.0.1:{tunnel.local_bind_port}/{DB['database_name']}",
+        pool_pre_ping=True,
+        connect_args={"read_timeout": 1200, "write_timeout": 1200, "connect_timeout": 60},
+    )
+
+
+tunnel = _make_tunnel()
 tunnel.start()
 atexit.register(tunnel.stop)
+engine = _make_engine()
 
-engine = create_engine(
-    f"mysql+pymysql://{quote_plus(DB['user'])}:{quote_plus(DB['password'])}"
-    f"@127.0.0.1:{tunnel.local_bind_port}/{DB['database_name']}",
-    pool_pre_ping=True,
-)
+
+def ensure_tunnel():
+    """Reopen the SSH tunnel if the AWS bastion dropped the session during
+    our 10-min idle sleep. Called at the start of each cycle."""
+    global tunnel, engine
+    try:
+        if tunnel.is_active and tunnel.is_alive:
+            return
+    except Exception:
+        pass
+    log(f"SSH tunnel is down; reopening...")
+    try:
+        tunnel.stop()
+    except Exception:
+        pass
+    tunnel = _make_tunnel()
+    tunnel.start()
+    engine.dispose()
+    engine = _make_engine()
 
 
 def _init_schema():
@@ -532,6 +561,7 @@ def stage_mixer_to_smc():
 
 def run_cycle():
     setup_logger()  # Rolls to tomorrow's file after midnight; prunes old files.
+    ensure_tunnel()
     try:
         stage_rct_to_mixer()
     except Exception:
