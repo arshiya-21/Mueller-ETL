@@ -1,0 +1,71 @@
+{
+  "database": {
+    "host": "mueller.cjmg6ek4cf9c.ap-south-1.rds.amazonaws.com",
+    "port": 53306,
+    "user": "mueller_scada",
+    "password": "",
+    "database_name": "mueller_data"
+  },
+  "ssh_tunnel": {
+    "ssh_host": "3.7.49.62",
+    "ssh_port": 30022,
+    "ssh_username": "rds-tunnel",
+    "ssh_private_key_path": "",
+    "ssh_private_key_password": null
+  },
+  "api": {
+    "base_url": "https://mueller.sandman.co.in",
+    "login_url": "/j_spring_security_check",
+    "upload_url": "/upload/prepared_sand_extra_upload_bulk",
+    "j_username": "mueller",
+    "j_password": "",
+    "foundry_line_id": 1,
+    "batch_size": 100
+  },
+
+  "poll_interval_seconds": 600,
+
+  "rct_table": "rct",
+  "rct_source_filter": null,
+  "sync_state_table": "mueller_sync_state",
+
+  "mixer_table": "mixer_cycle_data",
+
+  "cycle_address": "DB20.DBW0",
+  "tail_seconds": 20,
+  "include_incomplete": false,
+  "cycle_time_offset": 30,
+  "target_mix_time": 180,
+  "comp_setpoint_offset": 3,
+
+  "shift_timings": {
+    "1": "04:30:00-17:30:00",
+    "3": "20:00:00-04:30:00"
+  },
+
+  "plc_mapping": [
+    { "address": "DB20.DBW0",   "db_column": "cycle_no",                     "divisor": 1 },
+    { "address": "DB20.DBW2",   "db_column": "compact_preset_pct",           "divisor": 10 },
+    { "address": "DB20.DBW4",   "db_column": "sand_input_temp_c",            "divisor": 10 },
+    { "address": "DB20.DBW6",   "db_column": "corrected_preset_pct",         "divisor": 10 },
+    { "address": "DB20.DBW8",   "db_column": "readjust_water_l",             "divisor": 10 },
+    { "address": "DB20.DBW10",  "db_column": "compact_as1_measure_pct",      "divisor": 10 },
+    { "address": "DB20.DBW12",  "db_column": "corrected_water_2_l",          "divisor": 10 },
+    { "address": "DB20.DBW14",  "db_column": "compact_as2_measure_pct",      "divisor": 10 },
+    { "address": "DB20.DBW16",  "db_column": "corrected_water_3_l",          "divisor": 10 },
+    { "address": "DB20.DBW18",  "db_column": "compact_as3_measure_pct",      "divisor": 10 },
+    { "address": "DB20.DBW20",  "db_column": "corrected_water_4_l",          "divisor": 10 },
+    { "address": "DB20.DBW22",  "db_column": "variation_pct",                "divisor": 10 },
+    { "address": "DB20.DBW24",  "db_column": "total_water_l",                "divisor": 10 },
+    { "address": "DB20.DBW26",  "db_column": "cycle_time_sec",               "divisor": 1 },
+    { "address": "DB20.DBW28",  "db_column": "c_strength_preset_n_cm2",      "divisor": 10 },
+    { "address": "DB20.DBW30",  "db_column": "c_strength_measure_n_cm2",     "divisor": 10 },
+    { "address": "DB20.DBW36",  "db_column": "compact_as_final_measure_pct", "divisor": 10 },
+    { "address": "DB20.DBW126", "db_column": "weight_bento_kg",              "divisor": 10 },
+    { "address": "DB20.DBW128", "db_column": "additif2",                     "divisor": 10 },
+    { "address": "DB20.DBW130", "db_column": "additif3",                     "divisor": 10 },
+    { "address": "DB20.DBW136", "db_column": "weight_old_sand_kg",           "divisor": 1 },
+    { "address": "DB20.DBW148", "db_column": "poids_sn",                     "divisor": 10 },
+    { "address": "DB20.DBW184", "db_column": "additif4",                     "divisor": 10 }
+  ]
+}

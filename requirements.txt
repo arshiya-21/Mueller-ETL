@@ -1,0 +1,7 @@
+pandas
+PyMySQL
+SQLAlchemy
+requests
+sshtunnel
+paramiko
+cryptography

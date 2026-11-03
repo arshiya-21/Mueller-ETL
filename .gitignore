@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.Python
+.venv/
+venv/
+
+# Local runtime artifacts
+logs/
+
+# Secrets — never commit
+config.json
+rds-workbench 1
+*.pem
+*.key
+.env
+.env.*
+!.env.example
+
+# Legacy Excel inputs (DB-driven ETL doesn't read them)
+*.xlsx
