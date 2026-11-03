@@ -5,11 +5,9 @@
 -- =====================================================================
 
 SET @lag_min   = 11;                                -- minutes between mixing and pouring
--- SET @from_date = CURRENT_DATE - INTERVAL 1 DAY;     -- yesterday  (2-day rolling
--- SET @to_date   = CURRENT_DATE;                      -- today       window, same as AIW)
--- Option A: everything from a specific start date through today
-SET @from_date = '2026-01-01';
+SET @from_date = CURRENT_DATE - INTERVAL 1 DAY;
 SET @to_date   = CURRENT_DATE;
+
 
 WITH base AS (
     SELECT
