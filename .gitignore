@@ -12,6 +12,7 @@ logs/
 # Secrets — never commit
 config.json
 production_config.json
+prepared_sand_config.json
 rds-workbench 1
 *.pem
 *.key

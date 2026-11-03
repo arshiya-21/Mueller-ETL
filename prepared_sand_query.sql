@@ -8,8 +8,8 @@
 -- so the @vars persist for the main SELECT (same MySQL session).
 -- =====================================================================
 
-SET @start_date = CURRENT_DATE - INTERVAL 6 DAY;             -- 7 days ago (inclusive of today)
-SET @end_date   = DATE_ADD(@start_date, INTERVAL 7 DAY);     -- end of today (exclusive)
+SET @last_id = COALESCE(@last_id, 0);   -- cursor: last sand_lab.id processed
+                                         -- prepared_sand.py sets this from mueller_sync_state
 
 WITH sl AS (
   SELECT s.*,
@@ -19,7 +19,7 @@ WITH sl AS (
                    THEN REGEXP_SUBSTR(REGEXP_SUBSTR(s.location, '[dD][iI][sS][aA][^0-9]*[0-9]+'), '[0-9]+')
          END AS line_key
   FROM sand_lab s
-  WHERE s.entered >= @start_date AND s.entered < @end_date
+  WHERE s.pnfgcid > @last_id
 ),
 pd AS (
   SELECT p.*,
@@ -29,8 +29,6 @@ pd AS (
               ELSE TIMESTAMP(p.production_date, p.end_time) END AS end_dt,
          REGEXP_SUBSTR(p.line, '[0-9]+') AS pline_key
   FROM production_data p
-  WHERE p.production_date >= DATE_SUB(@start_date, INTERVAL 1 DAY)
-    AND p.production_date <  DATE_ADD(@end_date,   INTERVAL 1 DAY)
 ),
 matched AS (
   SELECT sl.*,
@@ -49,6 +47,7 @@ filled AS (
   WHERE m.rn = 1
 )
 SELECT
+  pnfgcid                     AS sand_lab_id,
   mb                          AS active_clay,
   NULL                        AS ambient_temp,
   compact                     AS compactibility,
