@@ -424,6 +424,7 @@ def run_cycle():
     query_rows = fetch_production_rows()
     log(f"Query returned {len(query_rows)} row(s)")
     if not query_rows:
+        log("Nothing new in the 2-day window; nothing to upsert or send.")
         return
     upsert_production(query_rows)
     log(f"Upserted {len(query_rows)} row(s) into {PRODUCTION_TABLE}")
