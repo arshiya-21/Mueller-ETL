@@ -284,29 +284,11 @@ def upsert_production(rows):
     return len(params)
 
 
-# Stage B — read back from the local table. This is what we send to the API,
-# NOT the raw query result. That way "whatever is in production_data IS what
-# is in cloud" is an invariant the code enforces: a row cannot reach the API
-# without first being stored locally.
-
-PRODUCTION_SELECT = text(f"""
-    SELECT production_date, shift, component_id, line, start_time, end_time,
-           boxes_poured, batches, total_mould, unpoured_mould,
-           weight_bento_kg, poids_sn, total_water_l
-    FROM {PRODUCTION_TABLE}
-    ORDER BY production_date, shift, line, start_time
-""")
-
-
-def read_production_rows():
-    with engine.connect() as conn:
-        return conn.execute(PRODUCTION_SELECT).mappings().all()
-
-
-
-
 # =========================================================================
-# Row -> API payload (ConsumptionBooking shape)
+# Stage B — build the API payload directly from the query rows (2-day window).
+# Local upsert is the audit trail; cloud is the live source. Server dedupes
+# on (date, shift, componentId, startTime, foundryLineId), so resending the
+# same 2-day window every 10 min only UPDATEs in-progress runs.
 # =========================================================================
 
 def _fmt_time(v):
@@ -333,24 +315,24 @@ def _num(v):
 
 
 def build_payload(rows):
-    """production_data rows -> ConsumptionBooking dicts matching the Java bean's
-    camelCase getters. foundryLineId is the fixed Mueller line pkey; tempLine
-    is the per-Disa integer from config.temp_line_map."""
+    """SQL query rows (2-day window) -> ConsumptionBooking dicts matching the
+    Java bean's camelCase getters. foundryLineId is the fixed Mueller line
+    pkey; tempLine is the per-Disa integer from config.temp_line_map."""
     payload = []
     for r in rows:
-        boxes = _num(r["boxes_poured"]) or 0.0
+        boxes = _num(r["No of Boxes Poured"]) or 0.0
         entry = {
-            "date":              _fmt_date(r["production_date"]),
-            "shift":             str(r["shift"]),
-            "startTime":         _fmt_time(r["start_time"]),
-            "endTime":           _fmt_time(r["end_time"]),
-            "componentId":       str(r["component_id"]),
+            "date":              _fmt_date(r["Date"]),
+            "shift":             str(r["Shift"]),
+            "startTime":         _fmt_time(r["Start Time"]),
+            "endTime":           _fmt_time(r["End Time"]),
+            "componentId":       str(r["Component ID"]),
             "foundryLineId":     FOUNDRY_LINE_ID,
-            "tempLine":          TEMP_LINE_MAP.get(r["line"]),
+            "tempLine":          TEMP_LINE_MAP.get(r["Line"]),
             "noOfBoxesPoured":   boxes,
-            "noOfBatches":       int(r["batches"] or 0),
-            "totalMould":        _num(r["total_mould"]) or boxes,
-            "unpouredMould":     _num(r["unpoured_mould"]) or 0.0,
+            "noOfBatches":       int(r["No of Batches"] or 0),
+            "totalMould":        boxes,
+            "unpouredMould":     0.0,
             "bentoniteSetPoint": _num(r["weight_bento_kg"]),
             "newSandSetPoint":   _num(r["poids_sn"]),
             "waterSetPoint":     _num(r["total_water_l"]),
@@ -437,19 +419,19 @@ def run_cycle():
     setup_logger()
     ensure_tunnel()
 
-    # Stage A: pull from pouring_data via the SQL and upsert into
-    # production_data (local source of truth).
+    # Stage A: pull the 2-day window from pouring_data and upsert into
+    # production_data as a local audit trail.
     query_rows = fetch_production_rows()
     log(f"Query returned {len(query_rows)} row(s)")
+    if not query_rows:
+        return
     upsert_production(query_rows)
     log(f"Upserted {len(query_rows)} row(s) into {PRODUCTION_TABLE}")
 
-    # Stage B: read EVERYTHING in production_data and push to the API.
-    # Reading from local (not from query_rows) enforces strict parity —
-    # whatever COUNT is in local is exactly the COUNT sent to cloud.
-    db_rows = read_production_rows()
-    payload = build_payload(db_rows)
-    log(f"Sending {len(payload)} booking record(s) from {PRODUCTION_TABLE}")
+    # Stage B: send the SAME 2-day rows to the API. Server dedupes against
+    # earlier sends, so in-progress runs UPDATE and new runs INSERT.
+    payload = build_payload(query_rows)
+    log(f"Sending {len(payload)} booking record(s)")
     upload_bookings(payload)
 
 
