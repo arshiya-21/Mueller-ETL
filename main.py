@@ -367,6 +367,10 @@ def insert_mixer(conn, df):
     if df.empty:
         return 0
     out = df.copy()
+    before = len(out)
+    out = out.drop_duplicates(subset=["cycle_no"], keep="last")
+    if len(out) < before:
+        log(f"Dropped {before - len(out)} duplicate cycle_no row(s) from batch")
     out["cycle_time"] = out["cycle_time"].map(lambda t: to_time(t).strftime("%H:%M:%S"))
     out.to_sql(MIXER_TABLE, conn, if_exists="append", index=False,
                chunksize=500, method="multi")
@@ -386,8 +390,13 @@ def stage_rct_to_mixer():
             log(f"Inserted {n} row(s); rct cursor -> {max_mmid}")
         except Exception as exc:
             # Transaction rolls back on exception; cursor stays put.
-            orig = getattr(exc, "orig", exc)
-            log(f"Stage 1 failed: {type(orig).__name__}: {orig}; rct cursor NOT advanced.")
+            root = exc
+            for _ in range(6):
+                nxt = getattr(root, "orig", None) or root.__cause__
+                if nxt is None or nxt is root:
+                    break
+                root = nxt
+            log(f"Stage 1 failed: {type(root).__name__}: {root!r}; rct cursor NOT advanced.")
             raise
 
 
