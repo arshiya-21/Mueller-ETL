@@ -1,0 +1,75 @@
+{
+  "database": {
+    "host": "mueller.cjmg6ek4cf9c.ap-south-1.rds.amazonaws.com",
+    "port": 53306,
+    "user": "mueller_scada",
+    "password": "",
+    "database_name": "mueller_data"
+  },
+  "ssh_tunnel": {
+    "ssh_host": "3.7.49.62",
+    "ssh_port": 30022,
+    "ssh_username": "rds-tunnel",
+    "ssh_private_key_path": "",
+    "ssh_private_key_password": null
+  },
+
+  "poll_interval_seconds": 600,
+  "full_reload": false,
+
+  "tables": {
+    "production": "production_data",
+    "scrap": "scrap_data",
+    "state": "rejection_upload_state",
+    "output": "scrap_production_match",
+    "component_master": "components"
+  },
+  "source_columns": {
+    "production": {
+      "production_date": "production_date",
+      "shift": "shift",
+      "component_id": "component_id",
+      "line": "line",
+      "qty": "boxes_poured"
+    },
+    "scrap": {
+      "smtpid": "smtpid",
+      "qty": "qty",
+      "entered": "entered",
+      "defect": "defect",
+      "number": "number"
+    },
+    "component_master": {
+      "PartNumber": "component_id",
+      "Weight": "weight_of_component",
+      "Cavities": "cavities"
+    }
+  },
+  "defect_names": {
+    "CM": "Cracked Mold",
+    "ST": "Strain (Flasing)",
+    "RO": "Ram-off",
+    "MP": "Metal Penetration",
+    "D": "Dirt (sand inclusion)",
+    "RGH": "Rough",
+    "SWL": "Swell",
+    "MR": "Misrun",
+    "BS": "Broke Short",
+    "SHR": "Shrink",
+    "TU": "Turbulence",
+    "SL": "Slag",
+    "CF": "Core Float",
+    "BC": "Broken Core",
+    "CC": "Core Crush",
+    "CB": "Core Blow",
+    "PAT": "Pattern",
+    "TBF": "Test Bar Failure",
+    "PG": "Poor Grind",
+    "BT": "Bent",
+    "CO": "Cut-Off",
+    "BRO": "Broke",
+    "S": "Shift",
+    "LWB": "Lock Wing Broken",
+    "OT": "Other"
+  }
+}

@@ -5,3 +5,5 @@ requests
 sshtunnel
 paramiko
 cryptography
+numpy
+rapidfuzz

@@ -22,7 +22,7 @@
     "batch_size": 100
   },
 
-  "poll_interval_seconds": 600,
+  "poll_interval_seconds": 900,
   "query_file": "prepared_sand_query.sql",
   "prepared_sand_table": "prepared_sand",
   "sync_state_table": "mueller_sync_state",
