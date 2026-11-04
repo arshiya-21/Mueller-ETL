@@ -386,7 +386,8 @@ def stage_rct_to_mixer():
             log(f"Inserted {n} row(s); rct cursor -> {max_mmid}")
         except Exception as exc:
             # Transaction rolls back on exception; cursor stays put.
-            log(f"Stage 1 failed: {exc}; rct cursor NOT advanced.")
+            orig = getattr(exc, "orig", exc)
+            log(f"Stage 1 failed: {type(orig).__name__}: {orig}; rct cursor NOT advanced.")
             raise
 
 
