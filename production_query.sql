@@ -5,7 +5,7 @@
 -- =====================================================================
 
 SET @lag_min   = 11;                                -- minutes between mixing and pouring
-SET @from_date = CURRENT_DATE - INTERVAL 1 DAY;
+SET @from_date = CURRENT_DATE - INTERVAL 7 DAY;
 SET @to_date   = CURRENT_DATE;
 
 
